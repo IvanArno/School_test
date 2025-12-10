@@ -1,0 +1,11 @@
+asgiref==3.8.1
+backports.zoneinfo==0.2.1
+django==4.2.27
+gunicorn==23.0.0
+nodejs==0.1.1
+npm==0.1.1
+optional-django==0.1.0
+packaging==25.0
+pillow==10.4.0
+sqlparse==0.5.4
+typing-extensions==4.13.2

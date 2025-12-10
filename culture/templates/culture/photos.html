@@ -1,0 +1,107 @@
+{% extends 'culture/base.html' %}
+
+{% block content %}
+    <h1 class="section-title">Фотографии</h1>
+    
+    <div class="category-buttons">
+        <button class="category-btn active" data-category="all">Все</button>
+        {% for category in categories %}
+        <button class="category-btn" data-category="{{ category.id }}">{{ category.name }}</button>
+        {% endfor %}
+    </div>
+    
+    <div class="grid" id="photos-grid">
+        {% for photo in photos %}
+        <div class="card photo-card" data-category="{% if photo.category %}{{ photo.category.id }}{% else %}none{% endif %}">
+            {% if photo.image %}
+            <img 
+                src="{{ photo.image.url }}" 
+                alt="{{ photo.title }}" 
+                class="photo-image"
+                onclick="openImageFullscreen(this)"
+                style="cursor: pointer;"
+            >
+            {% endif %}
+            <div class="card-content">
+                <h4>{{ photo.title }}</h4>
+                <p>{{ photo.description|truncatechars:100 }}</p>
+                {% if photo.category %}
+                <span style="background: #3498db; color: white; padding: 2px 8px; border-radius: 4px; font-size: 0.9rem;">
+                    {{ photo.category.name }}
+                </span>
+                {% endif %}
+                <p><small>Добавлено: {{ photo.uploaded_at|date:"d.m.Y" }}</small></p>
+            </div>
+        </div>
+        {% empty %}
+        <p>Фотографий пока нет.</p>
+        {% endfor %}
+    </div>
+    
+    <div id="fullscreen-image" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.9); z-index: 9999; align-items: center; justify-content: center;">
+        <img id="fullscreen-img" src="" alt="" style="max-width: 90%; max-height: 90%;">
+        <button onclick="closeImageFullscreen()" style="position: absolute; top: 20px; right: 20px; background: rgba(0,0,0,0.7); color: white; border: none; padding: 10px 15px; border-radius: 4px; cursor: pointer; font-size: 18px;">
+            ✕ Закрыть
+        </button>
+    </div>
+    
+    <script>
+        // Фильтрация по категориям
+        document.addEventListener('DOMContentLoaded', function() {
+            const buttons = document.querySelectorAll('.category-btn');
+            const photos = document.querySelectorAll('.photo-card');
+            
+            buttons.forEach(button => {
+                button.addEventListener('click', function() {
+                    buttons.forEach(btn => btn.classList.remove('active'));
+                    this.classList.add('active');
+                    
+                    const category = this.getAttribute('data-category');
+                    
+                    photos.forEach(photo => {
+                        const photoCategory = photo.getAttribute('data-category');
+                        if (category === 'all' || category === photoCategory) {
+                            photo.style.display = 'block';
+                        } else {
+                            photo.style.display = 'none';
+                        }
+                    });
+                });
+            });
+        });
+        
+        // Функции для полноэкранного режима изображений
+        function openImageFullscreen(imgElement) {
+            const fullscreenDiv = document.getElementById('fullscreen-image');
+            const fullscreenImg = document.getElementById('fullscreen-img');
+            
+            fullscreenImg.src = imgElement.src;
+            fullscreenImg.alt = imgElement.alt;
+            fullscreenDiv.style.display = 'flex';
+            document.body.style.overflow = 'hidden';
+        }
+        
+        function closeImageFullscreen() {
+            const fullscreenDiv = document.getElementById('fullscreen-image');
+            fullscreenDiv.style.display = 'none';
+            document.body.style.overflow = 'auto';
+        }
+        
+        // Закрытие по клику вне изображения
+        document.getElementById('fullscreen-image').addEventListener('click', function(e) {
+            if (e.target.id === 'fullscreen-image') {
+                closeImageFullscreen();
+            }
+        });
+        
+        // Закрытие по клавише ESC
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                const fullscreenDiv = document.getElementById('fullscreen-image');
+                if (fullscreenDiv.style.display === 'flex') {
+                    closeImageFullscreen();
+                }
+            }
+        });
+    </script>
+{% endblock %}

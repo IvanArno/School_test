@@ -1,0 +1,171 @@
+{% extends 'culture/base.html' %}
+
+{% block content %}
+<div style="max-width: 900px; margin: 0 auto;">
+    <a href="{% url 'performances' %}" class="btn" style="margin-bottom: 1rem;">← Назад к представлениям</a>
+    
+    <div class="card">
+        <div class="card-content">
+            <h1 style="color: #2c3e50; margin-bottom: 1rem;">{{ performance.title }}</h1>
+            
+            <div style="background: #ecf0f1; padding: 0.5rem 1rem; border-radius: 4px; display: inline-block; margin-bottom: 1.5rem;">
+                📅 <strong>Дата:</strong> {{ performance.date|date:"d.m.Y H:i" }}
+            </div>
+            
+            <!-- Видео секция -->
+            <div class="video-wrapper">
+                {% if performance.video_url %}
+                    {% if 'youtube.com' in performance.video_url or 'youtu.be' in performance.video_url %}
+                        <!-- YouTube видео -->
+                        <div style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; border-radius: 8px; margin: 2rem 0; background: #000;">
+                            {% if 'youtube.com/watch?v=' in performance.video_url %}
+                                <!-- Извлекаем ID видео из ссылки формата https://www.youtube.com/watch?v=VIDEO_ID -->
+                                {% with performance.video_url|slice:"32:" as video_id %}
+                                    <iframe 
+                                        src="https://www.youtube.com/embed/{{ video_id }}" 
+                                        style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none;" 
+                                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                                        allowfullscreen>
+                                    </iframe>
+                                {% endwith %}
+                            {% elif 'youtu.be/' in performance.video_url %}
+                                <!-- Извлекаем ID видео из короткой ссылки формата https://youtu.be/VIDEO_ID -->
+                                {% with performance.video_url|slice:"17:" as video_id %}
+                                    <iframe 
+                                        src="https://www.youtube.com/embed/{{ video_id }}" 
+                                        style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none;" 
+                                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                                        allowfullscreen>
+                                    </iframe>
+                                {% endwith %}
+                            {% endif %}
+                        </div>
+                    {% elif 'vimeo.com' in performance.video_url %}
+                        <!-- Vimeo видео -->
+                        <div style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; border-radius: 8px; margin: 2rem 0; background: #000;">
+                            {% with performance.video_url|slice:"18:" as video_id %}
+                                <iframe 
+                                    src="https://player.vimeo.com/video/{{ video_id }}" 
+                                    style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none;" 
+                                    allow="autoplay; fullscreen; picture-in-picture" 
+                                    allowfullscreen>
+                                </iframe>
+                            {% endwith %}
+                        </div>
+                    {% endif %}
+                    
+                {% elif performance.video_file %}
+                    <!-- Загруженное видео с улучшенным плеером -->
+                    <div style="margin: 2rem 0;">
+                        <div style="position: relative; border-radius: 8px; overflow: hidden; background: #000;">
+                            <video 
+                                id="video-player"
+                                controls 
+                                style="width: 100%; display: block;"
+                                playsinline
+                                preload="metadata"
+                            >
+                                <source src="{{ performance.video_file.url }}" type="video/mp4">
+                                Ваш браузер не поддерживает воспроизведение видео.
+                            </video>
+                        </div>
+                    </div>
+                {% else %}
+                    <div style="text-align: center; padding: 3rem; background: #f8f9fa; border-radius: 8px;">
+                        <p>Видео недоступно</p>
+                    </div>
+                {% endif %}
+            </div>
+            
+            <!-- Описание -->
+            <div style="margin: 2rem 0;">
+                <h3 style="color: #2c3e50; margin-bottom: 1rem;">Описание</h3>
+                <div style="line-height: 1.8; font-size: 1.1rem;">
+                    {{ performance.description|linebreaks }}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Улучшенный видеоплеер
+    document.addEventListener('DOMContentLoaded', function() {
+        const videoPlayer = document.getElementById('video-player');
+        
+        if (videoPlayer) {
+            // Настройка видеоплеера
+            videoPlayer.addEventListener('loadedmetadata', function() {
+                console.log('Видео загружено. Длительность:', videoPlayer.duration);
+            });
+            
+            videoPlayer.addEventListener('error', function() {
+                console.error('Ошибка воспроизведения видео');
+                
+                // Показать сообщение об ошибке
+                const container = videoPlayer.parentElement;
+                const errorMsg = document.createElement('div');
+                errorMsg.style.cssText = `
+                    position: absolute;
+                    top: 50%;
+                    left: 50%;
+                    transform: translate(-50%, -50%);
+                    background: rgba(0,0,0,0.9);
+                    color: white;
+                    padding: 2rem;
+                    border-radius: 8px;
+                    text-align: center;
+                    z-index: 100;
+                    width: 80%;
+                    max-width: 500px;
+                `;
+                errorMsg.innerHTML = `
+                    <h4 style="margin-bottom: 1rem;">Ошибка воспроизведения видео</h4>
+                    <p style="margin-bottom: 1rem;">
+                        Возможно, формат видео не поддерживается вашим браузером.
+                    </p>
+                    <p style="font-size: 0.9rem; color: #ccc;">
+                        Рекомендуется использовать видео в формате MP4 с кодеками H.264 (видео) и AAC (аудио).
+                    </p>
+                `;
+                container.appendChild(errorMsg);
+            });
+            
+            // Добавляем кнопку полноэкранного режима
+            const container = videoPlayer.parentElement;
+            const fullscreenBtn = document.createElement('button');
+            fullscreenBtn.innerHTML = '⛶';
+            fullscreenBtn.style.cssText = `
+                position: absolute;
+                top: 10px;
+                right: 10px;
+                background: rgba(0,0,0,0.7);
+                color: white;
+                border: none;
+                padding: 8px 12px;
+                border-radius: 4px;
+                cursor: pointer;
+                z-index: 10;
+                font-size: 16px;
+            `;
+            fullscreenBtn.addEventListener('click', function() {
+                if (videoPlayer.requestFullscreen) {
+                    videoPlayer.requestFullscreen();
+                } else if (videoPlayer.webkitRequestFullscreen) {
+                    videoPlayer.webkitRequestFullscreen();
+                } else if (videoPlayer.msRequestFullscreen) {
+                    videoPlayer.msRequestFullscreen();
+                }
+            });
+            container.appendChild(fullscreenBtn);
+            
+            // Обработка выхода из полноэкранного режима
+            document.addEventListener('fullscreenchange', function() {
+                if (!document.fullscreenElement) {
+                    fullscreenBtn.style.display = 'block';
+                }
+            });
+        }
+    });
+</script>
+{% endblock %}

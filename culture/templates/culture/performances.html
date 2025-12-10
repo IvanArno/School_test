@@ -1,0 +1,36 @@
+{% extends 'culture/base.html' %}
+
+{% block content %}
+    <h1 class="section-title">Представления</h1>
+    
+    <div class="grid">
+        {% for performance in performances %}
+        <div class="card">
+            <div class="card-content">
+                {% if performance.video_url or performance.video_file %}
+                <div style="position: absolute; top: 1rem; right: 1rem; background: #3498db; color: white; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.8rem;">
+                    🎬 Видео
+                </div>
+                {% endif %}
+                
+                <h3>{{ performance.title }}</h3>
+                <p>{{ performance.description|truncatechars:150 }}</p>
+                
+                <div style="margin-top: 1rem;">
+                    <p><strong>📅 {{ performance.date|date:"d.m.Y H:i" }}</strong></p>
+                    <a href="{% url 'performance_detail' performance.pk %}" class="btn">
+                        ▶ Смотреть видео
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="card">
+            <div class="card-content" style="text-align: center; padding: 3rem;">
+                <h3>Представлений пока нет</h3>
+                <p>Скоро здесь появятся новые видео</p>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+{% endblock %}

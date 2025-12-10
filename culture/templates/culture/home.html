@@ -1,0 +1,82 @@
+{% extends 'culture/base.html' %}
+
+{% block content %}
+    <section class="hero">
+        <h1>Добро пожаловать на наш культурный сайт!</h1>
+        <p>Здесь вы найдете информацию о школьных мероприятиях, афишах и фотографиях</p>
+    </section>
+    
+    <section>
+        <h2 class="section-title">Последние афиши</h2>
+        <div class="grid">
+            {% for poster in posters %}
+            <div class="card">
+                {% if poster.image %}
+                <img src="{{ poster.image.url }}" alt="{{ poster.title }}">
+                {% endif %}
+                <div class="card-content">
+                    <h3>{{ poster.title }}</h3>
+                    <p>{{ poster.description|truncatechars:100 }}</p>
+                    <p><strong>Дата:</strong> {{ poster.date }}</p>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        <a href="{% url 'posters' %}" class="btn">Все афиши</a>
+    </section>
+    
+    <section>
+        <h2 class="section-title">Последние представления</h2>
+        <div class="grid">
+            {% for performance in performances %}
+            <div class="card">
+                <div class="card-content">
+                    <!-- Иконка видео на главной -->
+                    {% if performance.video_url or performance.video_file %}
+                    <div style="position: absolute; top: 1rem; right: 1rem; background: #3498db; color: white; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.8rem;">
+                        🎬 Видео
+                    </div>
+                    {% endif %}
+                    
+                    <h3>{{ performance.title }}</h3>
+                    <p>{{ performance.description|truncatechars:100 }}</p>
+                    <p><strong>Дата:</strong> {{ performance.date|date:"d.m.Y H:i" }}</p>
+                    <div style="display: flex; gap: 0.5rem; margin-top: 1rem;">
+                        <a href="{% url 'performance_detail' performance.pk %}" class="btn">
+                            Подробнее
+                        </a>
+                        {% if performance.video_url or performance.video_file %}
+                        <a href="{% url 'performance_detail' performance.pk %}" class="btn" style="background: #e74c3c;">
+                            ▶ Смотреть видео
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        <a href="{% url 'performances' %}" class="btn">Все представления</a>
+    </section>
+    
+    <section>
+        <h2 class="section-title">Последние фотографии</h2>
+        <div class="grid">
+            {% for photo in photos %}
+            <div class="card">
+                {% if photo.image %}
+                <img src="{{ photo.image.url }}" alt="{{ photo.title }}">
+                {% endif %}
+                <div class="card-content">
+                    <h4>{{ photo.title }}</h4>
+                    {% if photo.category %}
+                    <span style="background: #eee; padding: 2px 8px; border-radius: 4px; font-size: 0.9rem;">
+                        {{ photo.category.name }}
+                    </span>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        <a href="{% url 'photos' %}" class="btn">Все фотографии</a>
+    </section>
+{% endblock %}

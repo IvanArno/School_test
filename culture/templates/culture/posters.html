@@ -1,0 +1,23 @@
+{% extends 'culture/base.html' %}
+
+{% block content %}
+    <h1 class="section-title">Афиши</h1>
+    
+    <div class="grid">
+        {% for poster in posters %}
+        <div class="card">
+            {% if poster.image %}
+            <img src="{{ poster.image.url }}" alt="{{ poster.title }}">
+            {% endif %}
+            <div class="card-content">
+                <h3>{{ poster.title }}</h3>
+                <p>{{ poster.description }}</p>
+                <p><strong>Дата события:</strong> {{ poster.date }}</p>
+                <p><strong>Добавлено:</strong> {{ poster.created_at|date:"d.m.Y" }}</p>
+            </div>
+        </div>
+        {% empty %}
+        <p>Афиш пока нет.</p>
+        {% endfor %}
+    </div>
+{% endblock %}
