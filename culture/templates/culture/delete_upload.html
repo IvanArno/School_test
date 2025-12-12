@@ -1,0 +1,101 @@
+{% extends 'culture/base.html' %}
+
+{% block content %}
+<div style="max-width: 600px; margin: 0 auto;">
+    <div class="card" style="background: #ffebee;">
+        <div class="card-content">
+            <h1 style="color: #c62828; margin-bottom: 1rem;">⚠️ Удаление материала</h1>
+            
+            <div style="background: white; padding: 1rem; border-radius: 4px; margin-bottom: 1.5rem;">
+                <p style="margin-bottom: 0.5rem;">
+                    <strong>{{ upload.get_upload_type_display }}:</strong> {{ upload.title }}
+                </p>
+                {% if upload.image %}
+                <img src="{{ upload.image.url }}" alt="{{ upload.title }}" style="max-width: 100%; max-height: 200px; border-radius: 4px; margin-top: 1rem;">
+                {% endif %}
+            </div>
+            
+            <div style="background: #fff3cd; padding: 1rem; border-radius: 4px; margin-bottom: 1.5rem; border-left: 4px solid #ff9800;">
+                <p style="margin: 0; color: #666;">
+                    <strong>⚠️ Внимание!</strong> Это действие необратимо. Материал и все связанные данные будут удалены.
+                </p>
+            </div>
+            
+            <div id="delete-message" style="display: none; padding: 1rem; margin: 1rem 0; border-radius: 4px;"></div>
+            
+            <form id="delete-form" style="display: flex; gap: 1rem; justify-content: center;">
+                {% csrf_token %}
+                <button type="submit" style="background: #f44336; color: white; border: none; padding: 0.75rem 2rem; border-radius: 4px; font-size: 1rem; cursor: pointer;">
+                    🗑️ Удалить материал
+                </button>
+                <a href="/" style="background: #9e9e9e; color: white; border: none; padding: 0.75rem 2rem; border-radius: 4px; font-size: 1rem; text-decoration: none; display: inline-flex; align-items: center;">
+                    ✕ Отмена
+                </a>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const form = document.getElementById('delete-form');
+        const deleteMessage = document.getElementById('delete-message');
+        
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            if (!confirm('Вы уверены? Это действие необратимо!')) {
+                return;
+            }
+            
+            const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+            
+            fetch('{% url "delete_upload" upload.pk %}', {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': csrfToken
+                }
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                const contentType = response.headers.get('content-type');
+                if (contentType && contentType.includes('application/json')) {
+                    return response.json();
+                } else {
+                    throw new Error('Server returned non-JSON response');
+                }
+            })
+            .then(data => {
+                if (data.success) {
+                    deleteMessage.style.backgroundColor = '#c8e6c9';
+                    deleteMessage.style.color = '#2e7d32';
+                    deleteMessage.style.border = '1px solid #81c784';
+                    deleteMessage.innerHTML = '✅ ' + data.message;
+                    deleteMessage.style.display = 'block';
+                    
+                    setTimeout(function() {
+                        window.location.href = data.redirect || '/';
+                    }, 1500);
+                } else {
+                    deleteMessage.style.backgroundColor = '#ffcdd2';
+                    deleteMessage.style.color = '#c62828';
+                    deleteMessage.style.border = '1px solid #ef9a9a';
+                    deleteMessage.innerHTML = '❌ Ошибка: ' + (data.error || 'Неизвестная ошибка');
+                    deleteMessage.style.display = 'block';
+                }
+            })
+            .catch(error => {
+                console.error('Ошибка:', error);
+                console.error('Полное сообщение об ошибке:', error.message);
+                deleteMessage.style.backgroundColor = '#ffcdd2';
+                deleteMessage.style.color = '#c62828';
+                deleteMessage.style.border = '1px solid #ef9a9a';
+                deleteMessage.innerHTML = '❌ Ошибка при отправке: ' + (error.message || 'Неизвестная ошибка');
+                deleteMessage.style.display = 'block';
+            });
+        });
+    });
+</script>
+{% endblock %}

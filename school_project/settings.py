@@ -27,7 +27,20 @@ DEBUG = True
 
 ALLOWED_HOSTS = ['school-project.loca.lt',
                  '127.0.0.1',
-                 'school-9fbn.onrender.com',]
+                 'school-9fbn.onrender.com',
+                 'localhost',
+                 '*.loca.lt',]
+
+# CSRF Configuration
+CSRF_TRUSTED_ORIGINS = [
+    'https://school-project.loca.lt',
+    'http://127.0.0.1:8000',
+    'http://localhost:8000',
+    'https://*.loca.lt',
+]
+
+CSRF_COOKIE_SECURE = False  # Set to True in production with HTTPS
+CSRF_COOKIE_HTTPONLY = False  # Must be False for JavaScript to access CSRF token
 
 
 # Application definition

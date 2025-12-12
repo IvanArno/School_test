@@ -9,11 +9,31 @@ from .models import Poster, Performance, Photo, Category, UserUpload
 
 def home(request):
     # Берем материалы из основных моделей
-    posters = Poster.objects.all().order_by('-date')[:3]
-    performances = Performance.objects.all().order_by('-date')[:3]
-    photos = Photo.objects.all().order_by('-uploaded_at')[:6]
+    official_posters = list(Poster.objects.all().order_by('-date')[:5])
+    official_performances = list(Performance.objects.all().order_by('-date')[:5])
+    official_photos = list(Photo.objects.all().order_by('-uploaded_at')[:10])
     
     # И пользовательские загрузки
+    user_posters = list(UserUpload.objects.filter(upload_type='poster').order_by('-created_at')[:5])
+    user_performances = list(UserUpload.objects.filter(upload_type='video').order_by('-created_at')[:5])
+    user_photos = list(UserUpload.objects.filter(upload_type='photo').order_by('-created_at')[:10])
+    
+    # Объединяем и сортируем по дате
+    all_posters = official_posters + user_posters
+    all_posters.sort(key=lambda x: getattr(x, 'date', getattr(x, 'created_at', timezone.now())), reverse=True)
+    
+    all_performances = official_performances + user_performances
+    all_performances.sort(key=lambda x: getattr(x, 'date', getattr(x, 'created_at', timezone.now())), reverse=True)
+    
+    all_photos = official_photos + user_photos
+    all_photos.sort(key=lambda x: getattr(x, 'uploaded_at', getattr(x, 'created_at', timezone.now())), reverse=True)
+    
+    # Берем только первые 3 для отображения на главной
+    posters = all_posters[:3]
+    performances = all_performances[:3]
+    photos = all_photos[:6]
+    
+    # И отдельно пользовательские загрузки для секции
     user_uploads = UserUpload.objects.all().order_by('-created_at')[:3]
     
     context = {
@@ -116,37 +136,12 @@ def upload_file(request):
         
         upload.save()
         
-        # Автоматически создаем запись в соответствующем разделе
-        if upload_type == 'poster' and upload.image:
-            # Создаем афишу
-            Poster.objects.create(
-                title=title,
-                image=upload.image,
-                description=description,
-                date=timezone.now().date(),
-            )
-        elif upload_type == 'photo' and upload.image:
-            # Создаем фото
-            Photo.objects.create(
-                title=title,
-                image=upload.image,
-                description=description,
-            )
-        elif upload_type == 'video':
-            # Создаем представление
-            if upload.video or upload.youtube_url:
-                Performance.objects.create(
-                    title=title,
-                    description=description,
-                    date=timezone.now(),
-                    video_file=upload.video if upload.video else None,
-                    video_url=upload.youtube_url if upload.youtube_url else None,
-                )
-                print(f"Performance created: {title}")
+        # Не создаём автоматические записи в Poster/Photo/Performance
+        # Пользовательские загрузки отображаются напрямую из UserUpload
         
         return JsonResponse({
             'success': True,
-            'message': 'Материал успешно загружен и сразу добавлен на сайт!',
+            'message': 'Материал успешно загружен!',
             'upload_id': upload.id
         })
         
@@ -158,4 +153,87 @@ def upload_file(request):
         return JsonResponse({
             'success': False,
             'error': error_msg
+        }, status=400)
+
+
+def edit_upload(request, pk):
+    """Редактирование пользовательской загрузки"""
+    try:
+        upload = get_object_or_404(UserUpload, pk=pk)
+        
+        if request.method == 'POST':
+            # Обновляем данные
+            upload.title = request.POST.get('title', upload.title).strip()
+            upload.description = request.POST.get('description', '').strip()
+            upload.youtube_url = request.POST.get('youtube_url', '').strip() or None
+            
+            # Обновляем файлы если они загружены
+            if 'image' in request.FILES:
+                # Удаляем старый файл если он есть
+                if upload.image:
+                    upload.image.delete()
+                upload.image = request.FILES['image']
+            
+            if 'video' in request.FILES:
+                # Удаляем старый файл если он есть
+                if upload.video:
+                    upload.video.delete()
+                upload.video = request.FILES['video']
+            
+            upload.save()
+            
+            return JsonResponse({
+                'success': True,
+                'message': 'Материал успешно обновлен!',
+                'upload_id': upload.id
+            })
+        
+        # GET запрос - показываем форму редактирования
+        return render(request, 'culture/edit_upload.html', {'upload': upload})
+        
+    except UserUpload.DoesNotExist:
+        return JsonResponse({
+            'success': False,
+            'error': 'Материал не найден'
+        }, status=404)
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'error': str(e)
+        }, status=400)
+
+
+def delete_upload(request, pk):
+    """Удаление пользовательской загрузки"""
+    try:
+        upload = get_object_or_404(UserUpload, pk=pk)
+        
+        if request.method == 'POST':
+            # Удаляем файлы
+            if upload.image:
+                upload.image.delete()
+            if upload.video:
+                upload.video.delete()
+            
+            # Удаляем саму загрузку
+            upload.delete()
+            
+            return JsonResponse({
+                'success': True,
+                'message': 'Материал успешно удален!',
+                'redirect': '/'
+            })
+        
+        # GET запрос - показываем подтверждение удаления
+        return render(request, 'culture/delete_upload.html', {'upload': upload})
+        
+    except UserUpload.DoesNotExist:
+        return JsonResponse({
+            'success': False,
+            'error': 'Материал не найден'
+        }, status=404)
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'error': str(e)
         }, status=400)

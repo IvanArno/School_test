@@ -11,6 +11,8 @@ urlpatterns = [
     path('photos/', views.photos_list, name='photos'),
     path('upload/', views.upload_page, name='upload'),
     path('upload/file/', views.upload_file, name='upload_file'),
+    path('upload/<int:pk>/edit/', views.edit_upload, name='edit_upload'),
+    path('upload/<int:pk>/delete/', views.delete_upload, name='delete_upload'),
 ]
 
 if settings.DEBUG:

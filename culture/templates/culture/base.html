@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="referrer" content="same-origin">
     <title>Школьный проект - Культурные мероприятия</title>
     <style>
         * {
@@ -190,10 +191,58 @@
     
     <footer>
         <div class="container">
-            <p>© 2024 Школьный проект. Все права защищены.</p>
+            <p>© 2025 Школьный проект. Все права защищены.</p>
             <p>Сайт создан для учебных целей</p>
         </div>
     </footer>
+    
+    <!-- Lightbox Modal -->
+    <div id="lightbox-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 9999; justify-content: center; align-items: center;">
+        <span style="position: absolute; top: 20px; right: 30px; color: white; font-size: 40px; cursor: pointer; font-weight: bold; user-select: none;">&times;</span>
+        <img id="lightbox-image" src="" alt="" style="max-width: 90%; max-height: 90%; object-fit: contain;">
+    </div>
+    
+    <script>
+        // Lightbox functionality
+        const lightboxModal = document.getElementById('lightbox-modal');
+        const lightboxImage = document.getElementById('lightbox-image');
+        const closeBtn = lightboxModal.querySelector('span');
+        
+        // Add click listeners to all photo and poster images
+        document.addEventListener('DOMContentLoaded', function() {
+            const images = document.querySelectorAll('.photo-image, .card img[src*="/media/"]');
+            
+            images.forEach(img => {
+                img.style.cursor = 'pointer';
+                img.addEventListener('click', function(e) {
+                    if (e.target.closest('a')) return; // Don't open lightbox if clicking a link
+                    lightboxImage.src = this.src;
+                    lightboxModal.style.display = 'flex';
+                    document.body.style.overflow = 'hidden';
+                });
+            });
+        });
+        
+        // Close lightbox
+        closeBtn.addEventListener('click', closeLightbox);
+        lightboxModal.addEventListener('click', function(e) {
+            if (e.target === lightboxModal) {
+                closeLightbox();
+            }
+        });
+        
+        function closeLightbox() {
+            lightboxModal.style.display = 'none';
+            document.body.style.overflow = 'auto';
+        }
+        
+        // Close on Escape key
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                closeLightbox();
+            }
+        });
+    </script>
     
     {% block extra_scripts %}
     {% endblock %}

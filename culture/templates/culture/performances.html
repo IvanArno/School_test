@@ -33,12 +33,20 @@
                     
                     {% if performance.is_user_upload %}
                     <!-- Ссылка на детали для пользовательской загрузки -->
-                    <a href="{% url 'performance_detail' performance.pk %}" class="btn">
-                        ▶ Смотреть видео
-                    </a>
-                    <span style="background: #4caf50; color: white; padding: 2px 8px; border-radius: 4px; font-size: 0.8rem; display: inline-block; margin-left: 0.5rem;">
-                        👤
-                    </span>
+                    <div style="display: flex; gap: 0.5rem; align-items: center;">
+                        <a href="{% url 'performance_detail' performance.pk %}" class="btn">
+                            ▶ Смотреть видео
+                        </a>
+                        <span style="background: #4caf50; color: white; padding: 2px 8px; border-radius: 4px; font-size: 0.8rem;">
+                            👤
+                        </span>
+                        <a href="{% url 'edit_upload' performance.pk %}" style="background: #2196f3; color: white; padding: 0.25rem 0.75rem; border-radius: 4px; font-size: 0.8rem; text-decoration: none;">
+                            ✏️
+                        </a>
+                        <a href="{% url 'delete_upload' performance.pk %}" style="background: #f44336; color: white; padding: 0.25rem 0.75rem; border-radius: 4px; font-size: 0.8rem; text-decoration: none;">
+                            🗑️
+                        </a>
+                    </div>
                     {% else %}
                     <a href="{% url 'performance_detail' performance.pk %}" class="btn">
                         ▶ Смотреть видео

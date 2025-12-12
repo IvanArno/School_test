@@ -1,0 +1,127 @@
+{% extends 'culture/base.html' %}
+
+{% block content %}
+<div style="max-width: 800px; margin: 0 auto;">
+    <h1 class="section-title">✏️ Редактировать материал</h1>
+    
+    <div class="card">
+        <div class="card-content">
+            <div id="edit-message" style="display: none; padding: 1rem; margin: 1rem 0; border-radius: 4px;"></div>
+            
+            <form id="edit-form" enctype="multipart/form-data">
+                {% csrf_token %}
+                <div style="margin-bottom: 1.5rem;">
+                    <label style="display: block; margin-bottom: 0.5rem; font-weight: bold;">Название *</label>
+                    <input type="text" name="title" value="{{ upload.title }}" required style="width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 4px;">
+                </div>
+                
+                <div style="margin-bottom: 1.5rem;">
+                    <label style="display: block; margin-bottom: 0.5rem; font-weight: bold;">Описание</label>
+                    <textarea name="description" rows="3" style="width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 4px;">{{ upload.description }}</textarea>
+                </div>
+                
+                <!-- Поля для разных типов контента -->
+                {% if upload.upload_type == 'photo' or upload.upload_type == 'poster' %}
+                <div style="margin-bottom: 1.5rem;">
+                    <label style="display: block; margin-bottom: 0.5rem; font-weight: bold;">Изображение</label>
+                    {% if upload.image %}
+                    <div style="margin-bottom: 1rem;">
+                        <img src="{{ upload.image.url }}" alt="{{ upload.title }}" style="max-width: 200px; max-height: 200px; border-radius: 4px;">
+                        <p style="margin-top: 0.5rem; font-size: 0.9rem; color: #666;">Текущее изображение</p>
+                    </div>
+                    {% endif %}
+                    <input type="file" name="image" accept="image/*" style="width: 100%; padding: 0.5rem;">
+                    <small style="color: #666;">Оставьте пусто, чтобы сохранить текущее изображение</small>
+                </div>
+                {% elif upload.upload_type == 'video' %}
+                <div style="margin-bottom: 1.5rem;">
+                    <label style="display: block; margin-bottom: 0.5rem; font-weight: bold;">Видеофайл</label>
+                    {% if upload.video %}
+                    <p style="margin-bottom: 0.5rem; font-size: 0.9rem; color: #666;">✓ Видеофайл загружен</p>
+                    {% endif %}
+                    <input type="file" name="video" accept="video/*" style="width: 100%; padding: 0.5rem;">
+                    <small style="color: #666;">Оставьте пусто, чтобы сохранить текущее видео</small>
+                </div>
+                
+                <div style="margin-bottom: 1.5rem;">
+                    <label style="display: block; margin-bottom: 0.5rem; font-weight: bold;">Или ссылка на видео</label>
+                    <input type="text" name="youtube_url" value="{{ upload.youtube_url|default:'' }}" placeholder="Ссылка на YouTube, ВКонтакте или Vimeo" style="width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 4px;">
+                    <small style="color: #666;">Примеры: https://youtu.be/..., https://vk.com/video-..., https://vkvideo.ru/video-... или https://vimeo.com/...</small>
+                </div>
+                {% endif %}
+                
+                <!-- Кнопки -->
+                <div style="text-align: center; display: flex; gap: 1rem; justify-content: center; margin-top: 2rem;">
+                    <button type="submit" style="background: #4caf50; color: white; border: none; padding: 0.75rem 2rem; border-radius: 4px; font-size: 1rem; cursor: pointer;">
+                        ✓ Сохранить изменения
+                    </button>
+                    <a href="/" style="background: #9e9e9e; color: white; border: none; padding: 0.75rem 2rem; border-radius: 4px; font-size: 1rem; text-decoration: none; display: inline-block;">
+                        ✕ Отмена
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const form = document.getElementById('edit-form');
+        const editMessage = document.getElementById('edit-message');
+        
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(form);
+            const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+            
+            fetch('{% url "edit_upload" upload.pk %}', {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-CSRFToken': csrfToken
+                }
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                const contentType = response.headers.get('content-type');
+                if (contentType && contentType.includes('application/json')) {
+                    return response.json();
+                } else {
+                    throw new Error('Server returned non-JSON response');
+                }
+            })
+            .then(data => {
+                if (data.success) {
+                    editMessage.style.backgroundColor = '#c8e6c9';
+                    editMessage.style.color = '#2e7d32';
+                    editMessage.style.border = '1px solid #81c784';
+                    editMessage.innerHTML = '✅ ' + data.message;
+                    editMessage.style.display = 'block';
+                    
+                    setTimeout(function() {
+                        window.location.href = '/';
+                    }, 1500);
+                } else {
+                    editMessage.style.backgroundColor = '#ffcdd2';
+                    editMessage.style.color = '#c62828';
+                    editMessage.style.border = '1px solid #ef9a9a';
+                    editMessage.innerHTML = '❌ Ошибка: ' + (data.error || 'Неизвестная ошибка');
+                    editMessage.style.display = 'block';
+                }
+            })
+            .catch(error => {
+                console.error('Ошибка:', error);
+                console.error('Полное сообщение об ошибке:', error.message);
+                editMessage.style.backgroundColor = '#ffcdd2';
+                editMessage.style.color = '#c62828';
+                editMessage.style.border = '1px solid #ef9a9a';
+                editMessage.innerHTML = '❌ Ошибка при отправке: ' + (error.message || 'Неизвестная ошибка');
+                editMessage.style.display = 'block';
+            });
+        });
+    });
+</script>
+{% endblock %}

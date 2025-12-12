@@ -108,6 +108,14 @@
                             {{ upload.created_at|date:"d.m.Y H:i" }}
                         </span>
                     </div>
+                    <div style="display: flex; gap: 0.5rem; margin-top: 1rem;">
+                        <a href="{% url 'edit_upload' upload.id %}" style="background: #2196f3; color: white; padding: 0.25rem 0.75rem; border-radius: 4px; font-size: 0.8rem; text-decoration: none;">
+                            ✏️ Редактировать
+                        </a>
+                        <a href="{% url 'delete_upload' upload.id %}" style="background: #f44336; color: white; padding: 0.25rem 0.75rem; border-radius: 4px; font-size: 0.8rem; text-decoration: none;">
+                            🗑️ Удалить
+                        </a>
+                    </div>
                 </div>
             </div>
             {% endfor %}
