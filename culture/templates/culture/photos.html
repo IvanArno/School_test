@@ -3,8 +3,15 @@
 {% block content %}
     <h1 class="section-title">Фотографии</h1>
     
+    <!-- Информация о пользовательских загрузках -->
+    <div style="background: #e3f2fd; padding: 1rem; border-radius: 8px; margin-bottom: 1rem; display: flex; justify-content: space-between; align-items: center;">
+        <p style="margin: 0;">📸 Любой пользователь может добавить фото через <a href="{% url 'upload' %}" style="color: #1565c0; font-weight: bold;">форму загрузки</a></p>
+    </div>
+    
     <div class="category-buttons">
         <button class="category-btn active" data-category="all">Все</button>
+        <button class="category-btn" data-category="user">👤 Пользовательские</button>
+        <button class="category-btn" data-category="official">🏫 Школьные</button>
         {% for category in categories %}
         <button class="category-btn" data-category="{{ category.id }}">{{ category.name }}</button>
         {% endfor %}
@@ -12,25 +19,41 @@
     
     <div class="grid" id="photos-grid">
         {% for photo in photos %}
-        <div class="card photo-card" data-category="{% if photo.category %}{{ photo.category.id }}{% else %}none{% endif %}">
+        <div class="card photo-card" 
+             data-category="{% if photo.category %}{{ photo.category.id }}{% else %}none{% endif %}"
+             data-type="{% if photo.is_user_upload %}user{% else %}official{% endif %}">
             {% if photo.image %}
-            <img 
-                src="{{ photo.image.url }}" 
-                alt="{{ photo.title }}" 
-                class="photo-image"
-                onclick="openImageFullscreen(this)"
-                style="cursor: pointer;"
-            >
+            <img src="{{ photo.image.url }}" alt="{{ photo.title }}" class="photo-image">
             {% endif %}
             <div class="card-content">
                 <h4>{{ photo.title }}</h4>
                 <p>{{ photo.description|truncatechars:100 }}</p>
-                {% if photo.category %}
-                <span style="background: #3498db; color: white; padding: 2px 8px; border-radius: 4px; font-size: 0.9rem;">
-                    {{ photo.category.name }}
-                </span>
-                {% endif %}
-                <p><small>Добавлено: {{ photo.uploaded_at|date:"d.m.Y" }}</small></p>
+                
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 0.5rem;">
+                    {% if photo.category %}
+                    <span style="background: #3498db; color: white; padding: 2px 8px; border-radius: 4px; font-size: 0.9rem;">
+                        {{ photo.category.name }}
+                    </span>
+                    {% else %}
+                    <span></span>
+                    {% endif %}
+                    
+                    {% if photo.is_user_upload %}
+                    <span style="background: #4caf50; color: white; padding: 2px 8px; border-radius: 4px; font-size: 0.8rem;">
+                        👤
+                    </span>
+                    {% endif %}
+                </div>
+                
+                <p style="margin-top: 0.5rem; font-size: 0.8rem; color: #666;">
+                    <small>Добавлено: 
+                        {% if photo.uploaded_at %}
+                            {{ photo.uploaded_at|date:"d.m.Y" }}
+                        {% else %}
+                            {{ photo.created_at|date:"d.m.Y" }}
+                        {% endif %}
+                    </small>
+                </p>
             </div>
         </div>
         {% empty %}
@@ -38,15 +61,7 @@
         {% endfor %}
     </div>
     
-    <div id="fullscreen-image" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.9); z-index: 9999; align-items: center; justify-content: center;">
-        <img id="fullscreen-img" src="" alt="" style="max-width: 90%; max-height: 90%;">
-        <button onclick="closeImageFullscreen()" style="position: absolute; top: 20px; right: 20px; background: rgba(0,0,0,0.7); color: white; border: none; padding: 10px 15px; border-radius: 4px; cursor: pointer; font-size: 18px;">
-            ✕ Закрыть
-        </button>
-    </div>
-    
     <script>
-        // Фильтрация по категориям
         document.addEventListener('DOMContentLoaded', function() {
             const buttons = document.querySelectorAll('.category-btn');
             const photos = document.querySelectorAll('.photo-card');
@@ -60,48 +75,24 @@
                     
                     photos.forEach(photo => {
                         const photoCategory = photo.getAttribute('data-category');
-                        if (category === 'all' || category === photoCategory) {
-                            photo.style.display = 'block';
+                        const photoType = photo.getAttribute('data-type');
+                        
+                        let show = false;
+                        
+                        if (category === 'all') {
+                            show = true;
+                        } else if (category === 'user') {
+                            show = photoType === 'user';
+                        } else if (category === 'official') {
+                            show = photoType === 'official';
                         } else {
-                            photo.style.display = 'none';
+                            show = category === photoCategory;
                         }
+                        
+                        photo.style.display = show ? 'block' : 'none';
                     });
                 });
             });
-        });
-        
-        // Функции для полноэкранного режима изображений
-        function openImageFullscreen(imgElement) {
-            const fullscreenDiv = document.getElementById('fullscreen-image');
-            const fullscreenImg = document.getElementById('fullscreen-img');
-            
-            fullscreenImg.src = imgElement.src;
-            fullscreenImg.alt = imgElement.alt;
-            fullscreenDiv.style.display = 'flex';
-            document.body.style.overflow = 'hidden';
-        }
-        
-        function closeImageFullscreen() {
-            const fullscreenDiv = document.getElementById('fullscreen-image');
-            fullscreenDiv.style.display = 'none';
-            document.body.style.overflow = 'auto';
-        }
-        
-        // Закрытие по клику вне изображения
-        document.getElementById('fullscreen-image').addEventListener('click', function(e) {
-            if (e.target.id === 'fullscreen-image') {
-                closeImageFullscreen();
-            }
-        });
-        
-        // Закрытие по клавише ESC
-        document.addEventListener('keydown', function(e) {
-            if (e.key === 'Escape') {
-                const fullscreenDiv = document.getElementById('fullscreen-image');
-                if (fullscreenDiv.style.display === 'flex') {
-                    closeImageFullscreen();
-                }
-            }
         });
     </script>
 {% endblock %}

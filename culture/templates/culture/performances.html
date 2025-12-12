@@ -3,11 +3,17 @@
 {% block content %}
     <h1 class="section-title">Представления</h1>
     
+    <!-- Информация о пользовательских загрузках -->
+    <div style="background: #e3f2fd; padding: 1rem; border-radius: 8px; margin-bottom: 1rem;">
+        <p style="margin: 0;">🎬 Любой пользователь может добавить видео через <a href="{% url 'upload' %}" style="color: #1565c0; font-weight: bold;">форму загрузки</a></p>
+    </div>
+    
     <div class="grid">
         {% for performance in performances %}
         <div class="card">
             <div class="card-content">
-                {% if performance.video_url or performance.video_file %}
+                <!-- Иконка видео, если есть -->
+                {% if performance.video_url or performance.video_file or performance.youtube_url %}
                 <div style="position: absolute; top: 1rem; right: 1rem; background: #3498db; color: white; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.8rem;">
                     🎬 Видео
                 </div>
@@ -17,20 +23,32 @@
                 <p>{{ performance.description|truncatechars:150 }}</p>
                 
                 <div style="margin-top: 1rem;">
-                    <p><strong>📅 {{ performance.date|date:"d.m.Y H:i" }}</strong></p>
+                    <p><strong>📅 
+                        {% if performance.date %}
+                            {{ performance.date|date:"d.m.Y H:i" }}
+                        {% else %}
+                            {{ performance.created_at|date:"d.m.Y H:i" }}
+                        {% endif %}
+                    </strong></p>
+                    
+                    {% if performance.is_user_upload %}
+                    <!-- Ссылка на детали для пользовательской загрузки -->
                     <a href="{% url 'performance_detail' performance.pk %}" class="btn">
                         ▶ Смотреть видео
                     </a>
+                    <span style="background: #4caf50; color: white; padding: 2px 8px; border-radius: 4px; font-size: 0.8rem; display: inline-block; margin-left: 0.5rem;">
+                        👤
+                    </span>
+                    {% else %}
+                    <a href="{% url 'performance_detail' performance.pk %}" class="btn">
+                        ▶ Смотреть видео
+                    </a>
+                    {% endif %}
                 </div>
             </div>
         </div>
         {% empty %}
-        <div class="card">
-            <div class="card-content" style="text-align: center; padding: 3rem;">
-                <h3>Представлений пока нет</h3>
-                <p>Скоро здесь появятся новые видео</p>
-            </div>
-        </div>
+        <p>Представлений пока нет.</p>
         {% endfor %}
     </div>
 {% endblock %}

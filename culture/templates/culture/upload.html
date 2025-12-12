@@ -1,0 +1,284 @@
+{% extends 'culture/base.html' %}
+
+{% block content %}
+<div style="max-width: 800px; margin: 0 auto;">
+    <h1 class="section-title">📤 Загрузить материал</h1>
+    
+    <div class="card">
+        <div class="card-content">
+            <div id="upload-message" style="display: none; padding: 1rem; margin: 1rem 0; border-radius: 4px;"></div>
+            
+            <form id="upload-form" enctype="multipart/form-data">
+                <div style="margin-bottom: 1.5rem;">
+                    <label style="display: block; margin-bottom: 0.5rem; font-weight: bold;">Тип материала *</label>
+                    <select id="upload-type" name="type" required style="width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 4px;">
+                        <option value="photo">Фотография</option>
+                        <option value="video">Видео</option>
+                        <option value="poster">Афиша</option>
+                    </select>
+                </div>
+                
+                <div style="margin-bottom: 1.5rem;">
+                    <label style="display: block; margin-bottom: 0.5rem; font-weight: bold;">Название *</label>
+                    <input type="text" name="title" required style="width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 4px;">
+                </div>
+                
+                <div style="margin-bottom: 1.5rem;">
+                    <label style="display: block; margin-bottom: 0.5rem; font-weight: bold;">Описание</label>
+                    <textarea name="description" rows="3" style="width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 4px;"></textarea>
+                </div>
+                
+                <!-- Поля для файлов -->
+                <div id="photo-fields" style="margin-bottom: 1.5rem;">
+                    <label style="display: block; margin-bottom: 0.5rem; font-weight: bold;">Изображение *</label>
+                    <input type="file" id="photo-image" name="photo_image" accept="image/*" style="width: 100%; padding: 0.5rem;">
+                    <small style="color: #666;">Максимальный размер: 5MB</small>
+                </div>
+                
+                <div id="video-fields" style="margin-bottom: 1.5rem; display: none;">
+                    <label style="display: block; margin-bottom: 0.5rem; font-weight: bold;">Видеофайл</label>
+                    <input type="file" id="video-video" name="video" accept="video/*" style="width: 100%; padding: 0.5rem;">
+                    <small style="color: #666;">Максимальный размер: 50MB</small>
+                    
+                    <div style="margin-top: 1rem;">
+                        <label style="display: block; margin-bottom: 0.5rem; font-weight: bold;">Или ссылка на видео</label>
+                        <input type="text" name="youtube_url" placeholder="Ссылка на YouTube, ВКонтакте или Vimeo" style="width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 4px;">
+                        <small style="color: #666;">Примеры: https://youtu.be/..., https://vk.com/video-..., https://vkvideo.ru/video-... или https://vimeo.com/...</small>
+                    </div>
+                </div>
+                
+                <div id="poster-fields" style="margin-bottom: 1.5rem; display: none;">
+                    <label style="display: block; margin-bottom: 0.5rem; font-weight: bold;">Афиша (изображение) *</label>
+                    <input type="file" id="poster-image" name="poster_image" accept="image/*" style="width: 100%; padding: 0.5rem;">
+                    <small style="color: #666;">Максимальный размер: 5MB</small>
+                </div>
+                
+                <!-- Кнопка отправки -->
+                <div style="text-align: center;">
+                    <button type="submit" id="submit-btn" style="background: #4caf50; color: white; border: none; padding: 0.75rem 2rem; border-radius: 4px; font-size: 1rem; cursor: pointer; display: inline-flex; align-items: center;">
+                        <span id="btn-text">📤 Загрузить сейчас</span>
+                        <span id="loading-spinner" style="display: none; margin-left: 0.5rem;">⏳</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <div style="margin-top: 2rem; padding: 1.5rem; background: #e8f5e9; border-radius: 8px;">
+        <h3 style="color: #2c3e50; margin-bottom: 1rem;">✨ Материал появится на сайте сразу!</h3>
+        <p>После загрузки ваш материал:</p>
+        <ul style="list-style: none; padding: 0;">
+            <li style="margin-bottom: 0.5rem; padding-left: 1.5rem; position: relative;">
+                <span style="position: absolute; left: 0;">✅</span>
+                Будет сразу виден на главной странице
+            </li>
+            <li style="margin-bottom: 0.5rem; padding-left: 1.5rem; position: relative;">
+                <span style="position: absolute; left: 0;">✅</span>
+                Попадет в соответствующий раздел (Афиши/Представления/Фотографии)
+            </li>
+            <li style="margin-bottom: 0.5rem; padding-left: 1.5rem; position: relative;">
+                <span style="position: absolute; left: 0;">✅</span>
+                Будет доступен всем посетителям сайта
+            </li>
+        </ul>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const form = document.getElementById('upload-form');
+        const uploadType = document.getElementById('upload-type');
+        const photoFields = document.getElementById('photo-fields');
+        const videoFields = document.getElementById('video-fields');
+        const posterFields = document.getElementById('poster-fields');
+        const submitBtn = document.getElementById('submit-btn');
+        const btnText = document.getElementById('btn-text');
+        const loadingSpinner = document.getElementById('loading-spinner');
+        const uploadMessage = document.getElementById('upload-message');
+        
+        // Переключение полей в зависимости от типа загрузки
+        uploadType.addEventListener('change', function() {
+            photoFields.style.display = 'none';
+            videoFields.style.display = 'none';
+            posterFields.style.display = 'none';
+            
+            if (this.value === 'photo') {
+                photoFields.style.display = 'block';
+            } else if (this.value === 'video') {
+                videoFields.style.display = 'block';
+            } else if (this.value === 'poster') {
+                posterFields.style.display = 'block';
+            }
+        });
+        
+        // Обработка отправки формы
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            // Валидация перед отправкой
+            const uploadType = document.getElementById('upload-type').value;
+            const titleInput = form.querySelector('input[name="title"]');
+            const photoImageInput = document.getElementById('photo-image');
+            const posterImageInput = document.getElementById('poster-image');
+            const videoInput = document.getElementById('video-video');
+            const youtubeUrlInput = form.querySelector('input[name="youtube_url"]');
+            
+            console.log('Form submission:', {
+                uploadType,
+                title: titleInput.value,
+                photoFile: photoImageInput ? photoImageInput.files.length : 0,
+                posterFile: posterImageInput ? posterImageInput.files.length : 0,
+                videoFile: videoInput ? videoInput.files.length : 0,
+                videoUrl: youtubeUrlInput ? youtubeUrlInput.value : ''
+            });
+            
+            if (!titleInput.value.trim()) {
+                uploadMessage.style.backgroundColor = '#ffcdd2';
+                uploadMessage.style.color = '#c62828';
+                uploadMessage.style.border = '1px solid #ef9a9a';
+                uploadMessage.innerHTML = '❌ Пожалуйста, введите название материала';
+                uploadMessage.style.display = 'block';
+                return;
+            }
+            
+            if (uploadType === 'photo' || uploadType === 'poster') {
+                const imageInput = uploadType === 'photo' ? photoImageInput : posterImageInput;
+                if (!imageInput || !imageInput.files.length) {
+                    uploadMessage.style.backgroundColor = '#ffcdd2';
+                    uploadMessage.style.color = '#c62828';
+                    uploadMessage.style.border = '1px solid #ef9a9a';
+                    uploadMessage.innerHTML = '❌ Пожалуйста, выберите изображение';
+                    uploadMessage.style.display = 'block';
+                    return;
+                }
+            } else if (uploadType === 'video') {
+                // Для видео нужно либо загруженный файл, либо URL
+                const hasVideoFile = videoInput && videoInput.files && videoInput.files.length > 0;
+                const hasVideoUrl = youtubeUrlInput && youtubeUrlInput.value.trim();
+                
+                console.log('Video validation:', { hasVideoFile, hasVideoUrl });
+                
+                if (!hasVideoFile && !hasVideoUrl) {
+                    uploadMessage.style.backgroundColor = '#ffcdd2';
+                    uploadMessage.style.color = '#c62828';
+                    uploadMessage.style.border = '1px solid #ef9a9a';
+                    uploadMessage.innerHTML = '❌ Пожалуйста, загрузите видеофайл или введите ссылку на видео';
+                    uploadMessage.style.display = 'block';
+                    return;
+                }
+                
+                // Валидация URL если он заполнен
+                if (hasVideoUrl) {
+                    const urlValue = youtubeUrlInput.value.trim();
+                    const validVideoPatterns = [
+                        'youtube.com',
+                        'youtu.be',
+                        'vk.com',
+                        'vkvideo.ru',
+                        'vimeo.com'
+                    ];
+                    
+                    const isValidUrl = validVideoPatterns.some(pattern => urlValue.includes(pattern));
+                    
+                    if (!isValidUrl) {
+                        uploadMessage.style.backgroundColor = '#ffcdd2';
+                        uploadMessage.style.color = '#c62828';
+                        uploadMessage.style.border = '1px solid #ef9a9a';
+                        uploadMessage.innerHTML = '❌ Пожалуйста, используйте ссылку на YouTube, ВКонтакте или Vimeo';
+                        uploadMessage.style.display = 'block';
+                        return;
+                    }
+                }
+            }
+            
+            // Показываем спиннер загрузки
+            submitBtn.disabled = true;
+            btnText.textContent = 'Загружается...';
+            loadingSpinner.style.display = 'inline';
+            uploadMessage.style.display = 'none';
+            
+            // Создаем FormData для отправки файлов
+            const formData = new FormData(form);
+            
+            console.log('FormData contents:');
+            for (let [key, value] of formData.entries()) {
+                if (key !== 'image' && key !== 'video') {
+                    console.log(key, value);
+                }
+            }
+            
+            // Отправляем данные на сервер
+            fetch('{% url "upload_file" %}', {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-CSRFToken': getCookie('csrftoken')
+                }
+            })
+            .then(response => {
+                console.log('Response status:', response.status);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log('Response data:', data);
+                submitBtn.disabled = false;
+                loadingSpinner.style.display = 'none';
+                
+                if (data.success) {
+                    uploadMessage.style.backgroundColor = '#c8e6c9';
+                    uploadMessage.style.color = '#2e7d32';
+                    uploadMessage.style.border = '1px solid #81c784';
+                    uploadMessage.innerHTML = '✅ ' + data.message;
+                    uploadMessage.style.display = 'block';
+                    
+                    // Очищаем форму
+                    form.reset();
+                    btnText.textContent = '📤 Загрузить сейчас';
+                    
+                    // Перенаправляем на главную через 2 секунды
+                    setTimeout(function() {
+                        window.location.href = '{% url "home" %}';
+                    }, 2000);
+                } else {
+                    uploadMessage.style.backgroundColor = '#ffcdd2';
+                    uploadMessage.style.color = '#c62828';
+                    uploadMessage.style.border = '1px solid #ef9a9a';
+                    uploadMessage.innerHTML = '❌ Ошибка: ' + (data.error || 'Неизвестная ошибка');
+                    uploadMessage.style.display = 'block';
+                    btnText.textContent = '📤 Загрузить сейчас';
+                }
+            })
+            .catch(error => {
+                console.error('Fetch error:', error);
+                submitBtn.disabled = false;
+                loadingSpinner.style.display = 'none';
+                uploadMessage.style.backgroundColor = '#ffcdd2';
+                uploadMessage.style.color = '#c62828';
+                uploadMessage.style.border = '1px solid #ef9a9a';
+                uploadMessage.innerHTML = '❌ Ошибка при отправке: ' + error.message;
+                uploadMessage.style.display = 'block';
+                btnText.textContent = '📤 Загрузить сейчас';
+            });
+        });
+        
+        // Функция для получения CSRF токена
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+    });
+</script>
+{% endblock %}

@@ -4,6 +4,9 @@
     <section class="hero">
         <h1>Добро пожаловать на наш культурный сайт!</h1>
         <p>Здесь вы найдете информацию о школьных мероприятиях, афишах и фотографиях</p>
+        <a href="{% url 'upload' %}" class="btn" style="background: #4caf50; margin-top: 1rem;">
+            📤 Добавить свой материал
+        </a>
     </section>
     
     <section>
@@ -17,7 +20,13 @@
                 <div class="card-content">
                     <h3>{{ poster.title }}</h3>
                     <p>{{ poster.description|truncatechars:100 }}</p>
-                    <p><strong>Дата:</strong> {{ poster.date }}</p>
+                    <p><strong>Дата:</strong> 
+                        {% if poster.date %}
+                            {{ poster.date }}
+                        {% else %}
+                            {{ poster.created_at|date:"d.m.Y" }}
+                        {% endif %}
+                    </p>
                 </div>
             </div>
             {% endfor %}
@@ -31,8 +40,7 @@
             {% for performance in performances %}
             <div class="card">
                 <div class="card-content">
-                    <!-- Иконка видео на главной -->
-                    {% if performance.video_url or performance.video_file %}
+                    {% if performance.video_url or performance.video_file or performance.youtube_url %}
                     <div style="position: absolute; top: 1rem; right: 1rem; background: #3498db; color: white; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.8rem;">
                         🎬 Видео
                     </div>
@@ -40,17 +48,16 @@
                     
                     <h3>{{ performance.title }}</h3>
                     <p>{{ performance.description|truncatechars:100 }}</p>
-                    <p><strong>Дата:</strong> {{ performance.date|date:"d.m.Y H:i" }}</p>
-                    <div style="display: flex; gap: 0.5rem; margin-top: 1rem;">
-                        <a href="{% url 'performance_detail' performance.pk %}" class="btn">
-                            Подробнее
-                        </a>
-                        {% if performance.video_url or performance.video_file %}
-                        <a href="{% url 'performance_detail' performance.pk %}" class="btn" style="background: #e74c3c;">
-                            ▶ Смотреть видео
-                        </a>
+                    <p><strong>Дата:</strong> 
+                        {% if performance.date %}
+                            {{ performance.date|date:"d.m.Y H:i" }}
+                        {% else %}
+                            {{ performance.created_at|date:"d.m.Y H:i" }}
                         {% endif %}
-                    </div>
+                    </p>
+                    <a href="{% url 'performance_detail' performance.pk %}" class="btn" style="margin-top: 0.5rem;">
+                        ▶ Смотреть видео
+                    </a>
                 </div>
             </div>
             {% endfor %}
@@ -79,4 +86,32 @@
         </div>
         <a href="{% url 'photos' %}" class="btn">Все фотографии</a>
     </section>
+    
+    <!-- Новый раздел: Последние пользовательские загрузки -->
+    {% if user_uploads %}
+    <section>
+        <h2 class="section-title">📤 Последние загрузки пользователей</h2>
+        <div class="grid">
+            {% for upload in user_uploads %}
+            <div class="card">
+                {% if upload.image %}
+                <img src="{{ upload.image.url }}" alt="{{ upload.title }}">
+                {% endif %}
+                <div class="card-content">
+                    <h4>{{ upload.title }}</h4>
+                    <p>{{ upload.description|truncatechars:100 }}</p>
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 0.5rem;">
+                        <span style="background: #4caf50; color: white; padding: 2px 8px; border-radius: 4px; font-size: 0.8rem;">
+                            👤 {{ upload.get_upload_type_display }}
+                        </span>
+                        <span style="font-size: 0.8rem; color: #666;">
+                            {{ upload.created_at|date:"d.m.Y H:i" }}
+                        </span>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </section>
+    {% endif %}
 {% endblock %}

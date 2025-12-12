@@ -1,4 +1,5 @@
 {% extends 'culture/base.html' %}
+{% load video_filters %}
 
 {% block content %}
 <div style="max-width: 900px; margin: 0 auto;">
@@ -51,6 +52,16 @@
                                     allowfullscreen>
                                 </iframe>
                             {% endwith %}
+                        </div>
+                    {% elif 'vk.com' in performance.video_url or 'vkvideo.ru' in performance.video_url %}
+                        <!-- ВКонтакте видео -->
+                        <div style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; border-radius: 8px; margin: 2rem 0; background: #000;">
+                            <iframe 
+                                src="{{ performance.video_url|vk_embed }}" 
+                                style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none;" 
+                                allow="autoplay; fullscreen; picture-in-picture" 
+                                allowfullscreen>
+                            </iframe>
                         </div>
                     {% endif %}
                     

@@ -3,6 +3,11 @@
 {% block content %}
     <h1 class="section-title">Афиши</h1>
     
+    <!-- Информация о пользовательских загрузках -->
+    <div style="background: #e3f2fd; padding: 1rem; border-radius: 8px; margin-bottom: 1rem;">
+        <p style="margin: 0;">📢 Любой пользователь может добавить афишу через <a href="{% url 'upload' %}" style="color: #1565c0; font-weight: bold;">форму загрузки</a></p>
+    </div>
+    
     <div class="grid">
         {% for poster in posters %}
         <div class="card">
@@ -11,9 +16,20 @@
             {% endif %}
             <div class="card-content">
                 <h3>{{ poster.title }}</h3>
-                <p>{{ poster.description }}</p>
-                <p><strong>Дата события:</strong> {{ poster.date }}</p>
-                <p><strong>Добавлено:</strong> {{ poster.created_at|date:"d.m.Y" }}</p>
+                <p>{{ poster.description|truncatechars:100 }}</p>
+                <p><strong>Дата:</strong> 
+                    {% if poster.date %}
+                        {{ poster.date }}
+                    {% else %}
+                        {{ poster.created_at|date:"d.m.Y" }}
+                    {% endif %}
+                </p>
+                <!-- Метка для пользовательских загрузок -->
+                {% if poster.is_user_upload %}
+                <span style="background: #4caf50; color: white; padding: 2px 8px; border-radius: 4px; font-size: 0.8rem; display: inline-block; margin-top: 0.5rem;">
+                    👤 Пользовательская загрузка
+                </span>
+                {% endif %}
             </div>
         </div>
         {% empty %}

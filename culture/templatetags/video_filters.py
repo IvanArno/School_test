@@ -1,4 +1,5 @@
 from django import template
+import re
 
 register = template.Library()
 
@@ -22,6 +23,31 @@ def vimeo_embed(url):
     return url
 
 @register.filter
+def vk_embed(url):
+    """Конвертирует обычную ссылку ВКонтакте в embed ссылку"""
+    try:
+        if not url:
+            return url
+        
+        # Поддерживаем оба домена: vk.com и vkvideo.ru
+        if 'vk.com/video' not in url and 'vkvideo.ru/video' not in url:
+            return url
+        
+        # Извлекаем oid и id из URL
+        # Форматы: 
+        # https://vk.com/video-123456_789012
+        # https://vkvideo.ru/video-228163754_456240347
+        match = re.search(r'video(-?\d+)_(\d+)', url)
+        if match:
+            oid = match.group(1)
+            vid = match.group(2)
+            return f'https://vk.com/video_ext.php?oid={oid}&id={vid}'
+    except Exception:
+        pass
+    
+    return url
+
+@register.filter
 def get_video_platform(url):
     """Определяет платформу видео по URL"""
     if not url:
@@ -30,4 +56,6 @@ def get_video_platform(url):
         return 'YouTube'
     elif 'vimeo.com' in url:
         return 'Vimeo'
+    elif 'vk.com' in url or 'vkvideo.ru' in url:
+        return 'ВКонтакте'
     return 'Другое'
