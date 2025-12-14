@@ -15,6 +15,7 @@
                         <option value="photo">Фотография</option>
                         <option value="video">Видео</option>
                         <option value="poster">Афиша</option>
+                        <option value="award">🏆 Награда</option>
                     </select>
                 </div>
                 
@@ -26,6 +27,17 @@
                 <div style="margin-bottom: 1.5rem;">
                     <label style="display: block; margin-bottom: 0.5rem; font-weight: bold;">Описание</label>
                     <textarea name="description" rows="3" style="width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 4px;"></textarea>
+                </div>
+
+                <div style="margin-bottom: 1.5rem;">
+                    <label style="display: block; margin-bottom: 0.5rem; font-weight: bold;">Категория</label>
+                    <select name="category" style="width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 4px;">
+                        <option value="">-- Без категории --</option>
+                        {% for category in categories %}
+                        <option value="{{ category.id }}">{{ category.name }}</option>
+                        {% endfor %}
+                    </select>
+                    <small style="color: #666;">Выберите категорию, например «Награды» для фото наград.</small>
                 </div>
                 
                 <!-- Поля для файлов -->
@@ -50,6 +62,12 @@
                 <div id="poster-fields" style="margin-bottom: 1.5rem; display: none;">
                     <label style="display: block; margin-bottom: 0.5rem; font-weight: bold;">Афиша (изображение) *</label>
                     <input type="file" id="poster-image" name="poster_image" accept="image/*" style="width: 100%; padding: 0.5rem;">
+                    <small style="color: #666;">Максимальный размер: 5MB</small>
+                </div>
+
+                <div id="award-fields" style="margin-bottom: 1.5rem; display: none;">
+                    <label style="display: block; margin-bottom: 0.5rem; font-weight: bold;">Фото награды *</label>
+                    <input type="file" id="award-image" name="award_image" accept="image/*" style="width: 100%; padding: 0.5rem;">
                     <small style="color: #666;">Максимальный размер: 5MB</small>
                 </div>
                 
@@ -91,6 +109,7 @@
         const photoFields = document.getElementById('photo-fields');
         const videoFields = document.getElementById('video-fields');
         const posterFields = document.getElementById('poster-fields');
+        const awardFields = document.getElementById('award-fields');
         const submitBtn = document.getElementById('submit-btn');
         const btnText = document.getElementById('btn-text');
         const loadingSpinner = document.getElementById('loading-spinner');
@@ -101,6 +120,7 @@
             photoFields.style.display = 'none';
             videoFields.style.display = 'none';
             posterFields.style.display = 'none';
+            awardFields.style.display = 'none';
             
             if (this.value === 'photo') {
                 photoFields.style.display = 'block';
@@ -108,6 +128,8 @@
                 videoFields.style.display = 'block';
             } else if (this.value === 'poster') {
                 posterFields.style.display = 'block';
+            } else if (this.value === 'award') {
+                awardFields.style.display = 'block';
             }
         });
         
@@ -120,6 +142,7 @@
             const titleInput = form.querySelector('input[name="title"]');
             const photoImageInput = document.getElementById('photo-image');
             const posterImageInput = document.getElementById('poster-image');
+            const awardImageInput = document.getElementById('award-image');
             const videoInput = document.getElementById('video-video');
             const youtubeUrlInput = form.querySelector('input[name="youtube_url"]');
             
@@ -128,6 +151,7 @@
                 title: titleInput.value,
                 photoFile: photoImageInput ? photoImageInput.files.length : 0,
                 posterFile: posterImageInput ? posterImageInput.files.length : 0,
+                awardFile: awardImageInput ? awardImageInput.files.length : 0,
                 videoFile: videoInput ? videoInput.files.length : 0,
                 videoUrl: youtubeUrlInput ? youtubeUrlInput.value : ''
             });
@@ -141,8 +165,16 @@
                 return;
             }
             
-            if (uploadType === 'photo' || uploadType === 'poster') {
-                const imageInput = uploadType === 'photo' ? photoImageInput : posterImageInput;
+            if (uploadType === 'photo' || uploadType === 'poster' || uploadType === 'award') {
+                let imageInput = null;
+                if (uploadType === 'photo') {
+                    imageInput = photoImageInput;
+                } else if (uploadType === 'poster') {
+                    imageInput = posterImageInput;
+                } else if (uploadType === 'award') {
+                    imageInput = awardImageInput;
+                }
+                
                 if (!imageInput || !imageInput.files.length) {
                     uploadMessage.style.backgroundColor = '#ffcdd2';
                     uploadMessage.style.color = '#c62828';

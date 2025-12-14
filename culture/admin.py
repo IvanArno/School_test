@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Poster, Performance, Photo, Category
+from .models import Poster, Performance, Photo, Category, Award, UserUpload
 
 @admin.register(Poster)
 class PosterAdmin(admin.ModelAdmin):
@@ -28,4 +28,16 @@ class CategoryAdmin(admin.ModelAdmin):
 class PhotoAdmin(admin.ModelAdmin):
     list_display = ['title', 'category', 'uploaded_at']
     list_filter = ['category', 'uploaded_at']
+    search_fields = ['title', 'description']
+
+@admin.register(Award)
+class AwardAdmin(admin.ModelAdmin):
+    list_display = ['name', 'category', 'date', 'created_at']
+    list_filter = ['category', 'date']
+    search_fields = ['name', 'description']
+
+@admin.register(UserUpload)
+class UserUploadAdmin(admin.ModelAdmin):
+    list_display = ['title', 'upload_type', 'category', 'created_at']
+    list_filter = ['upload_type', 'category', 'created_at']
     search_fields = ['title', 'description']

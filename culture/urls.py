@@ -9,6 +9,7 @@ urlpatterns = [
     path('performances/', views.performances_list, name='performances'),
     path('performance/<int:pk>/', views.performance_detail, name='performance_detail'),
     path('photos/', views.photos_list, name='photos'),
+    path('awards/', views.awards_list, name='awards'),
     path('upload/', views.upload_page, name='upload'),
     path('upload/file/', views.upload_file, name='upload_file'),
     path('upload/<int:pk>/edit/', views.edit_upload, name='edit_upload'),

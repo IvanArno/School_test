@@ -59,17 +59,40 @@ class Photo(models.Model):
     def is_user_upload(self):
         return False
 
+class Award(models.Model):
+    """Модель для наград с фотографиями"""
+    name = models.CharField(max_length=200, verbose_name="Название награды")
+    description = models.TextField(blank=True, verbose_name="Описание")
+    category = models.ForeignKey(Category, on_delete=models.SET_NULL, null=True, blank=True, verbose_name="Категория")
+    image = models.ImageField(upload_to='awards/', verbose_name="Фотография награды")
+    date = models.DateField(verbose_name="Дата получения")
+    created_at = models.DateTimeField(default=timezone.now)
+    
+    class Meta:
+        verbose_name = "Награда"
+        verbose_name_plural = "Награды"
+        ordering = ['-date']
+    
+    def __str__(self):
+        return self.name
+    
+    def is_user_upload(self):
+        return False
+
 # Простая модель для пользовательских загрузок
 class UserUpload(models.Model):
     TYPE_CHOICES = [
         ('photo', 'Фотография'),
         ('video', 'Видео'),
         ('poster', 'Афиша'),
+        ('award', 'Награда'),
     ]
     
     upload_type = models.CharField(max_length=10, choices=TYPE_CHOICES)
     title = models.CharField(max_length=200)
     description = models.TextField(blank=True)
+    # Категория для пользовательских загрузок (например, награды)
+    category = models.ForeignKey(Category, on_delete=models.SET_NULL, null=True, blank=True)
     
     # Файлы
     image = models.ImageField(upload_to='user_uploads/images/', blank=True, null=True)

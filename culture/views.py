@@ -5,7 +5,7 @@ from django.views.decorators.http import require_http_methods
 from django.middleware.csrf import get_token
 from django.utils import timezone
 import json
-from .models import Poster, Performance, Photo, Category, UserUpload
+from .models import Poster, Performance, Photo, Category, UserUpload, Award
 
 def home(request):
     # Берем материалы из основных моделей
@@ -88,8 +88,29 @@ def photos_list(request):
         'categories': categories
     })
 
+
+def awards_list(request):
+    """Показываем награды (официальные и пользовательские)."""
+    # Получаем официальные награды
+    official_awards = Award.objects.all().order_by('-date')
+    
+    # Получаем пользовательские загрузки наград
+    user_awards = UserUpload.objects.filter(upload_type='award').order_by('-created_at')
+    
+    # Объединяем
+    all_awards = list(official_awards) + list(user_awards)
+    
+    # Получаем все категории для фильтрации
+    categories = Category.objects.all()
+    
+    return render(request, 'culture/awards.html', {
+        'photos': all_awards,
+        'categories': categories
+    })
+
 def upload_page(request):
-    return render(request, 'culture/upload.html')
+    categories = Category.objects.all()
+    return render(request, 'culture/upload.html', {'categories': categories})
 
 @require_http_methods(["POST"])
 def upload_file(request):
@@ -118,6 +139,14 @@ def upload_file(request):
                     'error': 'Загрузите видеофайл или введите ссылку на видео'
                 }, status=400)
         
+        # Проверяем для наград и фото
+        if upload_type in ['award', 'photo']:
+            if 'photo_image' not in request.FILES and 'award_image' not in request.FILES:
+                return JsonResponse({
+                    'success': False,
+                    'error': 'Загрузите изображение'
+                }, status=400)
+        
         # Создаем пользовательскую загрузку
         upload = UserUpload.objects.create(
             upload_type=upload_type,
@@ -125,12 +154,22 @@ def upload_file(request):
             description=description,
             youtube_url=youtube_url if youtube_url else None,
         )
+        # Привязываем категорию, если передана
+        category_id = request.POST.get('category')
+        if category_id:
+            try:
+                cat = Category.objects.get(pk=int(category_id))
+                upload.category = cat
+            except Exception:
+                pass
         
         # Обрабатываем файлы
         if 'photo_image' in request.FILES:
             upload.image = request.FILES['photo_image']
         elif 'poster_image' in request.FILES:
             upload.image = request.FILES['poster_image']
+        elif 'award_image' in request.FILES:
+            upload.image = request.FILES['award_image']
         if 'video' in request.FILES:
             upload.video = request.FILES['video']
         

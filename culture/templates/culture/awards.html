@@ -1,0 +1,111 @@
+{% extends 'culture/base.html' %}
+
+{% block content %}
+    <h1 class="section-title">Награды</h1>
+    
+    <!-- Информация о пользовательских загрузках -->
+    <div style="background: #e3f2fd; padding: 1rem; border-radius: 8px; margin-bottom: 1rem; display: flex; justify-content: space-between; align-items: center;">
+        <p style="margin: 0;">🏆 Любой пользователь может добавить фото награды через <a href="{% url 'upload' %}" style="color: #1565c0; font-weight: bold;">форму загрузки</a></p>
+    </div>
+    
+    <div class="category-buttons">
+        <button class="category-btn active" data-category="all">Все</button>
+        <button class="category-btn" data-category="user">👤 Пользовательские</button>
+        <button class="category-btn" data-category="official">🏫 Школьные</button>
+        {% for category in categories %}
+        <button class="category-btn" data-category="{{ category.id }}">{{ category.name }}</button>
+        {% endfor %}
+    </div>
+    
+    <div class="grid" id="photos-grid">
+        {% for photo in photos %}
+        <div class="card photo-card" 
+             data-category="{% if photo.category %}{{ photo.category.id }}{% else %}none{% endif %}"
+             data-type="{% if photo.is_user_upload %}user{% else %}official{% endif %}">
+            {% if photo.image %}
+            <img src="{{ photo.image.url }}" alt="{{ photo.title }}" class="photo-image">
+            {% endif %}
+            <div class="card-content">
+                <h4>{{ photo.title }}</h4>
+                <p>{{ photo.description|truncatechars:100 }}</p>
+                
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 0.5rem;">
+                    {% if photo.category %}
+                    <span style="background: #3498db; color: white; padding: 2px 8px; border-radius: 4px; font-size: 0.9rem;">
+                        {{ photo.category.name }}
+                    </span>
+                    {% else %}
+                    <span></span>
+                    {% endif %}
+                    
+                    {% if photo.is_user_upload %}
+                    <div style="display: flex; gap: 0.5rem; align-items: center;">
+                        <span style="background: #4caf50; color: white; padding: 2px 8px; border-radius: 4px; font-size: 0.8rem;">
+                            👤
+                        </span>
+                        <a href="{% url 'edit_upload' photo.pk %}" style="background: #2196f3; color: white; padding: 0.25rem 0.75rem; border-radius: 4px; font-size: 0.8rem; text-decoration: none;">
+                            ✏️
+                        </a>
+                        <a href="{% url 'delete_upload' photo.pk %}" style="background: #f44336; color: white; padding: 0.25rem 0.75rem; border-radius: 4px; font-size: 0.8rem; text-decoration: none;">
+                            🗑️
+                        </a>
+                    </div>
+                    {% else %}
+                    <span></span>
+                    {% endif %}
+                </div>
+                
+                <p style="margin-top: 0.5rem; font-size: 0.8rem; color: #666;">
+                    <small>Добавлено: 
+                        {% if photo.uploaded_at %}
+                            {{ photo.uploaded_at|date:"d.m.Y" }}
+                        {% elif photo.date %}
+                            {{ photo.date|date:"d.m.Y" }}
+                        {% else %}
+                            {{ photo.created_at|date:"d.m.Y" }}
+                        {% endif %}
+                    </small>
+                </p>
+            </div>
+        </div>
+        {% empty %}
+        <p>Наград пока нет.</p>
+        {% endfor %}
+    </div>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const buttons = document.querySelectorAll('.category-btn');
+            const photos = document.querySelectorAll('.photo-card');
+            
+            buttons.forEach(button => {
+                button.addEventListener('click', function() {
+                    buttons.forEach(btn => btn.classList.remove('active'));
+                    this.classList.add('active');
+                    
+                    const category = this.getAttribute('data-category');
+                    
+                    photos.forEach(photo => {
+                        const photoCategory = photo.getAttribute('data-category');
+                        const photoType = photo.getAttribute('data-type');
+                        
+                        let show = false;
+                        
+                        if (category === 'all') {
+                            show = true;
+                        } else if (category === 'user') {
+                            show = photoType === 'user';
+                        } else if (category === 'official') {
+                            show = photoType === 'official';
+                        } else {
+                            show = category === photoCategory;
+                        }
+                        
+                        photo.style.display = show ? 'block' : 'none';
+                    });
+                });
+            });
+        });
+    </script>
+{% endblock %}
+                        

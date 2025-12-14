@@ -21,7 +21,7 @@
                 </div>
                 
                 <!-- Поля для разных типов контента -->
-                {% if upload.upload_type == 'photo' or upload.upload_type == 'poster' %}
+                {% if upload.upload_type == 'photo' or upload.upload_type == 'poster' or upload.upload_type == 'award' %}
                 <div style="margin-bottom: 1.5rem;">
                     <label style="display: block; margin-bottom: 0.5rem; font-weight: bold;">Изображение</label>
                     {% if upload.image %}
