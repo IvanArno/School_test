@@ -10,63 +10,62 @@
             <h1 style="color: #2c3e50; margin-bottom: 1rem;">{{ performance.title }}</h1>
             
             <div style="background: #ecf0f1; padding: 0.5rem 1rem; border-radius: 4px; display: inline-block; margin-bottom: 1.5rem;">
-                📅 <strong>Дата:</strong> {{ performance.date|date:"d.m.Y H:i" }}
+                📅 <strong>Дата:</strong> 
+                {% if performance.date %}
+                    {{ performance.date|date:"d.m.Y H:i" }}
+                {% else %}
+                    {{ performance.created_at|date:"d.m.Y H:i" }}
+                {% endif %}
             </div>
             
             <!-- Видео секция -->
             <div class="video-wrapper">
-                {% if performance.video_url %}
-                    {% if 'youtube.com' in performance.video_url or 'youtu.be' in performance.video_url %}
+                <!-- Обрабатываем youtube_url (может быть в Performance или UserUpload) -->
+                {% with url=performance.youtube_url %}
+                {% if url %}
+                    {% if 'youtube.com' in url or 'youtu.be' in url %}
                         <!-- YouTube видео -->
                         <div style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; border-radius: 8px; margin: 2rem 0; background: #000;">
-                            {% if 'youtube.com/watch?v=' in performance.video_url %}
-                                <!-- Извлекаем ID видео из ссылки формата https://www.youtube.com/watch?v=VIDEO_ID -->
-                                {% with performance.video_url|slice:"32:" as video_id %}
-                                    <iframe 
-                                        src="https://www.youtube.com/embed/{{ video_id }}" 
-                                        style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none;" 
-                                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
-                                        allowfullscreen>
-                                    </iframe>
-                                {% endwith %}
-                            {% elif 'youtu.be/' in performance.video_url %}
-                                <!-- Извлекаем ID видео из короткой ссылки формата https://youtu.be/VIDEO_ID -->
-                                {% with performance.video_url|slice:"17:" as video_id %}
-                                    <iframe 
-                                        src="https://www.youtube.com/embed/{{ video_id }}" 
-                                        style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none;" 
-                                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
-                                        allowfullscreen>
-                                    </iframe>
-                                {% endwith %}
-                            {% endif %}
+                            <iframe 
+                                src="{{ url|youtube_embed }}" 
+                                title="YouTube видео"
+                                style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none;" 
+                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen; payment"
+                                allowfullscreen="allowfullscreen"
+                                loading="lazy"
+                                referrerpolicy="no-referrer-when-downgrade">
+                            </iframe>
                         </div>
-                    {% elif 'vimeo.com' in performance.video_url %}
+                    {% elif 'vimeo.com' in url %}
                         <!-- Vimeo видео -->
                         <div style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; border-radius: 8px; margin: 2rem 0; background: #000;">
-                            {% with performance.video_url|slice:"18:" as video_id %}
-                                <iframe 
-                                    src="https://player.vimeo.com/video/{{ video_id }}" 
-                                    style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none;" 
-                                    allow="autoplay; fullscreen; picture-in-picture" 
-                                    allowfullscreen>
-                                </iframe>
-                            {% endwith %}
-                        </div>
-                    {% elif 'vk.com' in performance.video_url or 'vkvideo.ru' in performance.video_url %}
-                        <!-- ВКонтакте видео -->
-                        <div style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; border-radius: 8px; margin: 2rem 0; background: #000;">
                             <iframe 
-                                src="{{ performance.video_url|vk_embed }}" 
+                                src="{{ url|vimeo_embed }}" 
                                 style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none;" 
                                 allow="autoplay; fullscreen; picture-in-picture" 
                                 allowfullscreen>
                             </iframe>
                         </div>
+                    {% elif 'vk.com' in url or 'vkvideo.ru' in url %}
+                        <!-- ВКонтакте видео -->
+                        <div style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; border-radius: 8px; margin: 2rem 0; background: #000;">
+                            <iframe 
+                                src="{{ url|vk_embed }}" 
+                                style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none;" 
+                                allow="autoplay; fullscreen; picture-in-picture" 
+                                allowfullscreen>
+                            </iframe>
+                        </div>
+                    {% else %}
+                        <!-- Неподдерживаемая платформа видео -->
+                        <div style="text-align: center; padding: 3rem; background: #f8f9fa; border-radius: 8px;">
+                            <p>⚠️ Неподдерживаемая платформа видео</p>
+                            <p style="font-size: 0.9rem; color: #666;">URL: {{ url }}</p>
+                            <p style="font-size: 0.85rem; color: #999; margin-top: 1rem;">Поддерживаемые платформы: YouTube, Vimeo, ВКонтакте</p>
+                        </div>
                     {% endif %}
-                    
                 {% elif performance.video_file %}
-                    <!-- Загруженное видео с улучшенным плеером -->
+                    <!-- Performance - загруженное видео -->
                     <div style="margin: 2rem 0;">
                         <div style="position: relative; border-radius: 8px; overflow: hidden; background: #000;">
                             <video 
@@ -76,8 +75,28 @@
                                 playsinline
                                 preload="metadata"
                             >
+                                <source src="{{ performance.video_file.url }}" type="{{ performance.video_file|video_mime_type }}">
                                 <source src="{{ performance.video_file.url }}" type="video/mp4">
-                                Ваш браузер не поддерживает воспроизведение видео.
+                                <source src="{{ performance.video_file.url }}" type="video/webm">
+                                Ваш браузер не поддерживает воспроизведение видео. Пожалуйста, скачайте видео: <a href="{{ performance.video_file.url }}">скачать</a>
+                            </video>
+                        </div>
+                    </div>
+                {% elif performance.video %}
+                    <!-- UserUpload - загруженное видео -->
+                    <div style="margin: 2rem 0;">
+                        <div style="position: relative; border-radius: 8px; overflow: hidden; background: #000;">
+                            <video 
+                                id="video-player"
+                                controls 
+                                style="width: 100%; display: block;"
+                                playsinline
+                                preload="metadata"
+                            >
+                                <source src="{{ performance.video.url }}" type="{{ performance.video|video_mime_type }}">
+                                <source src="{{ performance.video.url }}" type="video/mp4">
+                                <source src="{{ performance.video.url }}" type="video/webm">
+                                Ваш браузер не поддерживает воспроизведение видео. Пожалуйста, скачайте видео: <a href="{{ performance.video.url }}">скачать</a>
                             </video>
                         </div>
                     </div>
@@ -86,6 +105,7 @@
                         <p>Видео недоступно</p>
                     </div>
                 {% endif %}
+                {% endwith %}
             </div>
             
             <!-- Описание -->

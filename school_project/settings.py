@@ -65,6 +65,21 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
+# Security headers
+SECURE_HSTS_SECONDS = 0  # Set to higher value in production
+SECURE_HSTS_INCLUDE_SUBDOMAINS = False
+SECURE_HSTS_PRELOAD = False
+SECURE_SSL_REDIRECT = False  # Only for production with HTTPS
+
+# Content Security Policy
+CSP_DEFAULT_SRC = ("'self'",)
+CSP_SCRIPT_SRC = ("'self'", "https://vk.com", "https://youtube.com", "https://www.youtube.com")
+CSP_FRAME_SRC = ("'self'", "https://vk.com", "https://www.youtube.com", "https://youtube.com", "https://vimeo.com", "https://player.vimeo.com")
+CSP_STYLE_SRC = ("'self'", "'unsafe-inline'")
+CSP_IMG_SRC = ("'self'", "data:", "https:")
+CSP_FONT_SRC = ("'self'",)
+CSP_CONNECT_SRC = ("'self'",)
+
 ROOT_URLCONF = 'school_project.urls'
 
 TEMPLATES = [

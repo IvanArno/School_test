@@ -15,7 +15,7 @@
                         <option value="photo">Фотография</option>
                         <option value="video">Видео</option>
                         <option value="poster">Афиша</option>
-                        <option value="award">🏆 Награда</option>
+                        <option value="award">Награда</option>
                     </select>
                 </div>
                 
@@ -27,17 +27,6 @@
                 <div style="margin-bottom: 1.5rem;">
                     <label style="display: block; margin-bottom: 0.5rem; font-weight: bold;">Описание</label>
                     <textarea name="description" rows="3" style="width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 4px;"></textarea>
-                </div>
-
-                <div style="margin-bottom: 1.5rem;">
-                    <label style="display: block; margin-bottom: 0.5rem; font-weight: bold;">Категория</label>
-                    <select name="category" style="width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 4px;">
-                        <option value="">-- Без категории --</option>
-                        {% for category in categories %}
-                        <option value="{{ category.id }}">{{ category.name }}</option>
-                        {% endfor %}
-                    </select>
-                    <small style="color: #666;">Выберите категорию, например «Награды» для фото наград.</small>
                 </div>
                 
                 <!-- Поля для файлов -->

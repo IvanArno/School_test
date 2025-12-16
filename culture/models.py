@@ -26,10 +26,16 @@ class Performance(models.Model):
     description = models.TextField()
     date = models.DateTimeField()
     
+    # Унифицировано с UserUpload - используется youtube_url для ссылок на видео
+    youtube_url = models.URLField(
+        blank=True, 
+        null=True, 
+        help_text="Ссылка на видео (YouTube, Vimeo, ВКонтакте)"
+    )
     video_url = models.URLField(
         blank=True, 
         null=True, 
-        help_text="Ссылка на YouTube видео"
+        help_text="Альтернативная ссылка на видео (для совместимости)"
     )
     video_file = models.FileField(
         upload_to='videos/', 
